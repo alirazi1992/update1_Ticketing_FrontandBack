@@ -97,7 +97,7 @@ const categoryLabels: Record<TicketCategory, string> = {
 
 interface ClientDashboardProps {
   tickets: Ticket[];
-  onTicketCreate: (ticket: Ticket) => void;
+  onTicketCreate: (ticket: Ticket) => Promise<boolean>;
   currentUser: CurrentUser | null;
   categoriesData: CategoriesData;
   activeSection?: "tickets" | "create";
@@ -155,9 +155,11 @@ export function ClientDashboard({
     setViewDialogOpen(true);
   };
 
-  const handleTicketCreate = (ticket: Ticket) => {
-    onTicketCreate(ticket);
-    setTicketDialogOpen(false);
+  const handleTicketCreate = async (ticket: Ticket) => {
+    const saved = await onTicketCreate(ticket);
+    if (saved) {
+      setTicketDialogOpen(false);
+    }
   };
 
   const handleCancelTicketForm = () => {
