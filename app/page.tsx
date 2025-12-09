@@ -2,14 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  FolderTree,
-  LayoutDashboard,
-  ListChecks,
-  LogIn,
-  Settings2,
-  Ticket as TicketIcon,
-} from "lucide-react";
+import { FolderTree, LayoutDashboard, ListChecks, Settings2, Ticket as TicketIcon } from "lucide-react";
 
 import { apiRequest } from "@/lib/api-client";
 import type {
@@ -34,8 +27,6 @@ import {
   DashboardShell,
   type DashboardNavItem,
 } from "@/components/dashboard-shell";
-import { LoginDialog } from "@/components/login-dialog";
-import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
 import { useCategories } from "@/services/useCategories";
 import type { CategoriesData } from "@/services/categories-types";
@@ -45,7 +36,6 @@ export default function Home() {
   const { user, token, isLoading } = useAuth();
   const router = useRouter();
 
-  const [loginDialogOpen, setLoginDialogOpen] = useState(false);
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [technicians, setTechnicians] = useState<TechnicianProfile[]>([]);
   const { categories: categoriesData, save: saveCategories } = useCategories();
@@ -141,12 +131,12 @@ export default function Home() {
   // -------- Ticket handlers (single definitions) --------
 
   const handleTicketCreate = async (draft: Ticket) => {
-    if (!token) return;
+    if (!token) return false;
 
     const category = categoriesRef.current[draft.category];
     if (!category?.backendId) {
       console.warn("Missing category mapping for", draft.category);
-      return;
+      return false;
     }
 
     try {
@@ -166,8 +156,10 @@ export default function Home() {
 
       const ticket = mapApiTicketToUi(created, categoriesRef.current, []);
       setTickets((prev) => [ticket, ...prev]);
+      return true;
     } catch (error) {
       console.error("Failed to create ticket", error);
+      return false;
     }
   };
 
@@ -435,50 +427,12 @@ export default function Home() {
   }
 
   if (!user) {
-    // در عمل به /login ریدایرکت می‌شوی، اما این fallback هم می‌ماند
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <div className="max-w-md w-full">
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
-              <LogIn className="w-8 h-8 text-primary-foreground" />
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              سیستم مدیریت خدمات IT
-            </h1>
-            <p className="text-gray-600">برای دسترسی به سیستم وارد شوید</p>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <Button
-              onClick={() => setLoginDialogOpen(true)}
-              className="w-full gap-2"
-              size="lg"
-            >
-              <LogIn className="w-5 h-5" />
-              ورود به سیستم
-            </Button>
-
-            <div className="mt-6 pt-6 border-t">
-              <p className="text-sm text-gray-500 text-center mb-3">
-                حساب‌های نمونه:
-              </p>
-              <div className="space-y-2 text-xs text-gray-600">
-                <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                  <span>کاربر: ahmad@company.com / 123456</span>
-                </div>
-                <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                  <span>تکنسین: ali@company.com / 123456</span>
-                </div>
-                <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                  <span>مدیر: admin@company.com / 123456</span>
-                </div>
-              </div>
-            </div>
-          </div>
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center">
+        <div className="text-center space-y-3">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-100 mx-auto" />
+          <p>در حال هدایت به صفحه ورود...</p>
         </div>
-
-        <LoginDialog open={loginDialogOpen} onOpenChange={setLoginDialogOpen} />
       </div>
     );
   }

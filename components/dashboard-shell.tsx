@@ -254,7 +254,7 @@ export function DashboardShell({ user, navItems, activeItem, onSelect, children 
         </aside>
 
         <div className="flex min-h-screen flex-1 flex-col lg:mr-0">
-          <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-800 bg-slate-950/80 px-4 backdrop-blur">
+          <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-800 bg-slate-950 px-4">
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"

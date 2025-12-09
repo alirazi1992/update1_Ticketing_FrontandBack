@@ -28,7 +28,7 @@ const priorityLabels: Record<string, string> = {
 
 interface TwoStepTicketFormProps {
   onClose: () => void
-  onSubmit: (data: any) => void
+  onSubmit: (data: any) => Promise<boolean>
   categoriesData: any
 }
 
@@ -36,6 +36,7 @@ export function TwoStepTicketForm({ onClose, onSubmit, categoriesData }: TwoStep
   const { user } = useAuth()
   const [currentStep, setCurrentStep] = useState(1)
   const [attachedFiles, setAttachedFiles] = useState<UploadedFile[]>([])
+  const [submitting, setSubmitting] = useState(false)
 
   const activeSchema = useMemo(() => getCombinedSchema(currentStep), [currentStep])
 
@@ -114,10 +115,10 @@ export function TwoStepTicketForm({ onClose, onSubmit, categoriesData }: TwoStep
 
   const handleFormSubmit = async (data: any) => {
     try {
-      
+      setSubmitting(true)
+
       const ticketId = `TK-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 999) + 1).padStart(3, "0")}`
 
-      
       // Extract dynamic fields: map keys starting with dyn_ to clean IDs
       const dynEntries = Object.entries(data)
         .filter(([k, v]) => k.startsWith("dyn_") && v !== undefined && v !== "")
@@ -160,20 +161,25 @@ export function TwoStepTicketForm({ onClose, onSubmit, categoriesData }: TwoStep
         },
       }
 
-      onSubmit(ticketData)
+      const saved = await onSubmit(ticketData)
 
-      toast({
-        title: "تیکت با موفقیت ثبت شد",
-        description: `شماره تیکت شما: ${ticketId}`,
-      })
-
-      onClose()
+      if (saved) {
+        toast({
+          title: "تیکت با موفقیت ثبت شد",
+          description: `شماره تیکت شما: ${ticketId}`,
+        })
+        onClose()
+      } else {
+        throw new Error("Ticket save failed")
+      }
     } catch (error) {
       toast({
         title: "خطا در ثبت تیکت",
         description: "لطفاً دوباره تلاش کنید",
         variant: "destructive",
       })
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -341,8 +347,8 @@ export function TwoStepTicketForm({ onClose, onSubmit, categoriesData }: TwoStep
                 <ChevronLeft className="w-4 h-4 mr-1" />
               </Button>
             ) : (
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "در حال ثبت..." : "ثبت تیکت"}
+              <Button type="submit" disabled={isSubmitting || submitting}>
+                {isSubmitting || submitting ? "در حال ثبت..." : "ثبت تیکت"}
               </Button>
             )}
           </div>
